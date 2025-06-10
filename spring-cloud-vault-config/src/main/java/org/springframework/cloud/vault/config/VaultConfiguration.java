@@ -54,6 +54,7 @@ import org.springframework.web.client.RestTemplate;
  * Support class for Vault configuration providing utility methods.
  *
  * @author Mark Paluch
+ * @author Issam El-atif
  * @since 3.0
  */
 final class VaultConfiguration {
@@ -163,7 +164,8 @@ final class VaultConfiguration {
 		customizers.forEach(builder::customizers);
 		requestCustomizers.forEach(builder::requestCustomizers);
 
-		if (StringUtils.hasText(this.vaultProperties.getNamespace())) {
+		if (!this.vaultProperties.getCrossNamespaceSharing().isEnabled()
+				&& StringUtils.hasText(this.vaultProperties.getNamespace())) {
 			builder.defaultHeader(VaultHttpHeaders.VAULT_NAMESPACE, this.vaultProperties.getNamespace());
 		}
 		return builder;
@@ -174,7 +176,11 @@ final class VaultConfiguration {
 		VaultProperties.SessionLifecycle lifecycle = this.vaultProperties.getSession().getLifecycle();
 
 		if (lifecycle.isEnabled()) {
-			RestTemplate restTemplate = restTemplateFactory.create();
+			RestTemplate restTemplate = restTemplateFactory.create(builder -> {
+				if (StringUtils.hasText(this.vaultProperties.getNamespace())) {
+					builder.defaultHeader(VaultHttpHeaders.VAULT_NAMESPACE, this.vaultProperties.getNamespace());
+				}
+			});
 			LifecycleAwareSessionManagerSupport.RefreshTrigger trigger = new LifecycleAwareSessionManagerSupport.FixedTimeoutRefreshTrigger(
 					lifecycle.getRefreshBeforeExpiry(), lifecycle.getExpiryThreshold());
 			return new LifecycleAwareSessionManager(clientAuthentication, taskSchedulerSupplier.get(), restTemplate,

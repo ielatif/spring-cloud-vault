@@ -53,6 +53,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.vault.VaultException;
 import org.springframework.vault.authentication.AuthenticationStepsFactory;
 import org.springframework.vault.authentication.ClientAuthentication;
@@ -64,6 +65,7 @@ import org.springframework.vault.client.RestTemplateBuilder;
 import org.springframework.vault.client.RestTemplateFactory;
 import org.springframework.vault.client.SimpleVaultEndpointProvider;
 import org.springframework.vault.client.VaultEndpointProvider;
+import org.springframework.vault.client.VaultHttpHeaders;
 import org.springframework.vault.client.WebClientBuilder;
 import org.springframework.vault.client.WebClientFactory;
 import org.springframework.vault.config.AbstractVaultConfiguration.ClientFactoryWrapper;
@@ -88,6 +90,7 @@ import org.springframework.web.client.RestTemplate;
  * {@link BootstrapRegistryInitializer}.
  *
  * @author Mark Paluch
+ * @author Issam El-atif
  * @since 3.0
  * @see VaultConfigLocation
  * @see VaultAutoConfiguration
@@ -507,8 +510,12 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 				RestTemplate externalRestTemplate = new RestTemplate(factory);
 
 				ClientAuthenticationFactory authenticationFactory = new ClientAuthenticationFactory(
-						this.vaultProperties, this.bootstrap.get(RestTemplateFactory.class).create(),
-						externalRestTemplate);
+						this.vaultProperties, this.bootstrap.get(RestTemplateFactory.class).create(builder -> {
+							if (StringUtils.hasText(this.vaultProperties.getNamespace())) {
+								builder.defaultHeader(VaultHttpHeaders.VAULT_NAMESPACE,
+										this.vaultProperties.getNamespace());
+							}
+						}), externalRestTemplate);
 				return authenticationFactory.createClientAuthentication();
 			});
 		}

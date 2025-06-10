@@ -42,6 +42,7 @@ import org.springframework.vault.support.LeaseStrategy;
  * @author Michal Budzyn
  * @author Grenville Wilson
  * @author Mårten Svantesson
+ * @author Issam El-atif
  */
 @ConfigurationProperties(VaultProperties.PREFIX)
 public class VaultProperties implements EnvironmentAware {
@@ -82,6 +83,11 @@ public class VaultProperties implements EnvironmentAware {
 	 */
 	@Nullable
 	private String namespace;
+
+	/**
+	 * Enable Cross Namespace Secret Sharing (requires Vault Enterprise).
+	 */
+	private CrossNamespaceSharing crossNamespaceSharing = new CrossNamespaceSharing();
 
 	/**
 	 * Reactive properties.
@@ -203,6 +209,14 @@ public class VaultProperties implements EnvironmentAware {
 
 	public void setNamespace(@Nullable String namespace) {
 		this.namespace = namespace;
+	}
+
+	public CrossNamespaceSharing getCrossNamespaceSharing() {
+		return crossNamespaceSharing;
+	}
+
+	public void setCrossNamespaceSharing(CrossNamespaceSharing crossNamespaceSharing) {
+		this.crossNamespaceSharing = crossNamespaceSharing;
 	}
 
 	public Reactive getReactive() {
@@ -372,6 +386,28 @@ public class VaultProperties implements EnvironmentAware {
 	public enum AuthenticationMethod {
 
 		APPROLE, AWS_EC2, AWS_IAM, AZURE_MSI, CERT, CUBBYHOLE, GCP_GCE, KUBERNETES, NONE, PCF, TOKEN;
+
+	}
+
+	/**
+	 * Cross Namespace Sharing properties.
+	 *
+	 * @since 5.0.0
+	 */
+	public static class CrossNamespaceSharing {
+
+		/**
+		 * Flag to indicate that Cross Namespace Sharing is enabled
+		 */
+		private boolean enabled = true;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
+		}
 
 	}
 

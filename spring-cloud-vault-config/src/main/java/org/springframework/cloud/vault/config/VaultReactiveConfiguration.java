@@ -56,6 +56,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * Support class for Vault configuration providing utility methods.
  *
  * @author Mark Paluch
+ * @author issam El-atif
  * @since 3.0
  */
 final class VaultReactiveConfiguration {
@@ -99,7 +100,8 @@ final class VaultReactiveConfiguration {
 	private WebClientBuilder applyCustomizer(List<WebClientCustomizer> customizers, WebClientBuilder builder) {
 		customizers.forEach(builder::customizers);
 
-		if (StringUtils.hasText(this.vaultProperties.getNamespace())) {
+		if (!this.vaultProperties.getCrossNamespaceSharing().isEnabled()
+				&& StringUtils.hasText(this.vaultProperties.getNamespace())) {
 			builder.defaultHeader(VaultHttpHeaders.VAULT_NAMESPACE, this.vaultProperties.getNamespace());
 		}
 
